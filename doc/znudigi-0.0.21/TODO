@@ -1,0 +1,15 @@
+Unordered todo list
+
+TX
+Other modes (all the ones supported by FLDIGI+MFSK+PocketDigi+DRM780, for a start)
+Correct use of threading, locks, queues
+Fractional sample conversion
+Test and handle multiple sound devices
+Configuration file
+IQ (stereo) input for SDR
+Rig congrol using W1HKJ rigxml format (at least read and set VFO, mode, TX/RX)
+More transparent network layer that retains language neutrality
+Better UI client than RPSK
+- Swing? SWT?
+- possibly non-networked client
+- Convenience and fun clients (CQ monitor, avatar chat, chess)

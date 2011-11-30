@@ -1,0 +1,21 @@
+* ZnuDigi was written by Leigh L Klotz, Jr <Leigh@WA5ZNU.org>
+* However it incorporates code licensed under GPL or BSD license from the following individuals:
+
+* org/wa5znu/znuradio/dsp/FFT.java,  org/wa5znu/znuradio/dsp/Complex.java
+  Kevin Wayne <wayne@CS.Princeton.EDU>
+  Licensed under dual GPL and BSD December 16, 2007.
+
+* org/wa5znu/znuradio/modems/BPSK.java, org/wa5znu/znuradio/modems/bpsk/PSKVaricode.java
+- Tomi Manninen OH2BNS <oh2bns@sral.fi>, who described the genesis of these file in his program "gMFSK:"
+    PSK31 support in gMFSK borrows heavily from the C++ modem classes written
+    by Hansi Reiser DL9RDZ (which in turn is partly derived from the work of
+    Andrew Senior G0TJZ and Peter Martinez G3PLX). While I have not used any
+    code directly, much of the architecture and algorithms are almost directly
+    copied from there.
+- Dave Freese W1HKJ <w1hkj@w1hkj.com>
+- Vojtech Bubnik <OK1AK@users.sourceforge.net>
+
+If you are an author and I have failed to cite you, please let me
+know.  If you contributed your code to gMFSK, twpsk, fldigi,
+PocketDigi, or DRM780, then it is already licensed under GPL and I
+but I will still add your name here.

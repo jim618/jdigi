@@ -1,0 +1,33 @@
+0.1 First Release 2003 March 16
+0.2 Spectrum length is now x rather than x/2.
+0.3 Cleanup layout.  Add more buttons; some of them work.
+    There is a timing bug in the AWT layout; sometimes
+    the waterfall comes up all the way on the left.
+0.4 Made set mode work (bidirectional).
+    Added bandwidth command (bidirectional).
+0.5 Send characters; make TX/RX/Abort work.  Make SQL/AFC/LSB work.
+    No sync up of button state yet.
+0.6 Callsign and password authentication, though not hashed or encrypted
+0.61 Echo of TX characters as sent.  TX buffer still not used properly.
+0.62 Add frequency scale code copied from gMFSK with permission to use under MIT/X11 license
+     from Tomi Manninen <oh2bns@sral.fi>.
+0.7  Two changes to reduce JVM CPU usage from 99% to 3%:
+     Fix busy loop in TX code (this accounts for most of the time).
+     Use Java2D BufferedImage for offscreen image so that we can read directly from
+     network stream without having to render pixels one at at time.  This change
+     I may have to back out if it turns out there is more utility in having
+     pre-JDK1.2 support.  
+0.71 Back out BufferedImage code as changing the buffer to gray
+     broke the green line and drawing it on the screen after the image 
+     makes it flash.
+     Try to make closing both application and applet work.
+0.72 Hardcode 14.069 and LSB
+     Try to show MHz in displays
+0.73 Cut down on random digits in MHz
+0.80 January 9, 2008. Undo 0.72.  Various minor changes to work better with znudigi.
+0.81 January 11, 2008 Add rpsk.bat
+0.82 January 15, 2008 
+     Improved command line args
+     Handle both byte and nybbles for spectrum, with request set by command line.
+     Default applet to nybbles.
+

@@ -1,0 +1,21 @@
+ZnuDigi-0.0.17
+	Jan 9, 2008
+	RX only.  BPSK31 only.  No UI (but see RPSK)
+ZnuDigi-0.0.18
+	Jan 9, 2008
+	Catch one more sound card opening failure type (IllegalArgumentException thrown by some sound interfaces)
+	Add a command-line argument to the Network program to allow you to specify the sound card number, instead of recompiling.
+ZnuDigi-0.0.19
+	Jan 11, 2008
+	Try all sound devices in increasing order and print out results, stopping at first where startAudio works
+	Make build script work better on Windows
+ZnuDigi-0.0.20
+	Jan 15, 2008
+	In ClientConnection, treat 's' as s request for spectrum nybbles, and 'S' for bytes
+	In SpectrumRecord, produce either nybbles or bytes, as requested.
+ZnuDigi-0.0.21
+	Jan 16, 2008
+	Put in rate limiting if client doesn't ack in 25+1 frames.  (Need to calculate this value better.)
+	Put in some more synchronization around client closing, not that it's right.
+
+	

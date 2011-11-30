@@ -1,0 +1,15 @@
+RPSK 0.82 -- a Java client for the RPSK protocol.
+http://wa5znu.org/rpsk
+(C) 2004, 2007, 2008 Leigh L. Klotz, Jr.
+All rights reserved.
+For license terms, see the file LICENSE.
+
+To build:
+ build.sh
+
+To run
+ rpsk
+or
+ java -jar /home/klotz/java/RPSK/RPSK.jar localhost 3125 false
+
+To use as applet, copy applet.html and RPSK.jar to your web server.

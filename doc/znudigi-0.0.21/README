@@ -1,0 +1,35 @@
+znudigi is a digital modem program for amateur (ham) radio.
+
+Unlike other digimode programs, znudigi has a complete separation between
+the receiver/modem code and the user interface code.  In fact, znudigi
+is provided with no user interface, only a TCP/IP network interface
+and a Java interface.
+
+See the RPSK program for a sample network client in Java.
+
+znudigi is designed to provide an easy path for experimentation in both 
+digital signal processing design and in user interface design, by isolating
+the two from one another.
+
+To Compile:
+- znudigi requires JDK 1.6 to compile.
+- compile with build.sh or build.bat.
+
+To Run:
+Even if your computer has only one sound card, there will be multiple Java sound devices.
+znudigi will try them all until it finds one that works.
+If your computer has multiple sound cards, you may find that znudigi uses a sound
+card other than the one you want.  If that happens, you can manually specify the
+device number on the command line.
+
+- Start with 
+ java -jar znudigi.jar
+to try sound all sound devices starting at 0.  It should stop at one that works.
+
+You can note the number it prints out for the sound device and use it next time:
+  java -jar znudigi.jar 4
+
+License and Copyright
+- znudigi is released under GNU GPL V2, but may be made available under other licenses in the future.
+- Copyright 2007, 2008 Leigh L. Klotz, Jr. <Leigh@WA5ZNU.org>
+
