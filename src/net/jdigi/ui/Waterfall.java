@@ -27,7 +27,7 @@ public class Waterfall extends Canvas {
 
 	private static final int WIDTH = 1024;
 	private static final double MAXIMUM_FREQUENCY = 4000.0;
-	public static final double FREQUENCY_TO_PIXELS_SCALE_FACTOR = MAXIMUM_FREQUENCY/WIDTH;
+	public static final double FREQUENCY_TO_PIXELS_SCALE_FACTOR = MAXIMUM_FREQUENCY / WIDTH;
 	private static final int WATERFALL_HEIGHT = 128;
 	private static final int RULER_HEIGHT = 20;
 	private final Color FREQUENCY_COLOR = Color.green;
@@ -116,15 +116,15 @@ public class Waterfall extends Canvas {
 		screen.drawImage(offScreenImage, 0, RULER_HEIGHT, this);
 		if (highlightFrequencyInHertz > 0 && highlightFrequencyInHertz != signalFrequencyInHertz) {
 			screen.setColor(HIGHLIGHT_FREQUENCY_COLOR);
-			int leftBandwidthEdge = (int)(highlightFrequencyInHertz / FREQUENCY_TO_PIXELS_SCALE_FACTOR - halfBandwidthInPixels);
-			int rightBandwidthEdge = (int)(highlightFrequencyInHertz / FREQUENCY_TO_PIXELS_SCALE_FACTOR + halfBandwidthInPixels);
+			int leftBandwidthEdge = (int) (highlightFrequencyInHertz / FREQUENCY_TO_PIXELS_SCALE_FACTOR - halfBandwidthInPixels);
+			int rightBandwidthEdge = (int) (highlightFrequencyInHertz / FREQUENCY_TO_PIXELS_SCALE_FACTOR + halfBandwidthInPixels);
 			screen.drawLine(leftBandwidthEdge, RULER_HEIGHT, leftBandwidthEdge, WATERFALL_HEIGHT + RULER_HEIGHT);
 			screen.drawLine(rightBandwidthEdge, RULER_HEIGHT, rightBandwidthEdge, WATERFALL_HEIGHT + RULER_HEIGHT);
 		}
 		if (signalFrequencyInHertz >= 0) {
 			screen.setColor(FREQUENCY_COLOR);
-			int leftBandwidthEdge = (int)(signalFrequencyInHertz / FREQUENCY_TO_PIXELS_SCALE_FACTOR - halfBandwidthInPixels);
-			int rightBandwidthEdge = (int)(signalFrequencyInHertz / FREQUENCY_TO_PIXELS_SCALE_FACTOR + halfBandwidthInPixels);
+			int leftBandwidthEdge = (int) (signalFrequencyInHertz / FREQUENCY_TO_PIXELS_SCALE_FACTOR - halfBandwidthInPixels);
+			int rightBandwidthEdge = (int) (signalFrequencyInHertz / FREQUENCY_TO_PIXELS_SCALE_FACTOR + halfBandwidthInPixels);
 
 			screen.drawLine(leftBandwidthEdge, RULER_HEIGHT, leftBandwidthEdge, WATERFALL_HEIGHT + RULER_HEIGHT);
 			screen.drawLine(rightBandwidthEdge, RULER_HEIGHT, rightBandwidthEdge, WATERFALL_HEIGHT + RULER_HEIGHT);
@@ -140,16 +140,15 @@ public class Waterfall extends Canvas {
 
 	boolean handleSpectrum(int frame, double[] data, int length) throws IOException {
 		scroll();
-			
-//		System.out.println("Waterfall/handleSpectrum ");
-//		for (int i = 0 ; i < 64 ; i++) {
-//			System.out.print("|" + data[i]);
-//		}
-//		System.out.println("\n");
+
+		// System.out.println("Waterfall/handleSpectrum ");
+		// for (int i = 0 ; i < 64 ; i++) {
+		// System.out.print("|" + data[i]);
+		// }
+		// System.out.println("\n");
 
 		for (int x = 0; x < length; x++) {
 			int b = (int) (data[x] * 255);
-			//b = 128;
 			plot(x, 0, b < 0 ? b + 256 : b);
 		}
 		invalidate();
@@ -159,18 +158,22 @@ public class Waterfall extends Canvas {
 	}
 
 	private void scroll() {
-		offScreenGraphics.copyArea(0, 0, WIDTH, WATERFALL_HEIGHT - 1, 0, 1);
+		if (offScreenGraphics != null) {
+			offScreenGraphics.copyArea(0, 0, WIDTH, WATERFALL_HEIGHT - 1, 0, 1);
+		}
 	}
 
 	private void plot(int x, int y, int color) {
-		offScreenGraphics.setColor(colorTable[color]);
-		offScreenGraphics.fillRect(x, y, 1, 1);
+		if (offScreenGraphics != null) {
+			offScreenGraphics.setColor(colorTable[color]);
+			offScreenGraphics.fillRect(x, y, 1, 1);
+		}
 	}
 
 	/**
 	 * Change audio frequency
 	 */
-	public void setFrequency(int frequencyInHertz) {
+	public void setReceiveFrequency(int frequencyInHertz) {
 		signalFrequencyInHertz = frequencyInHertz;
 	}
 
@@ -207,7 +210,11 @@ public class Waterfall extends Canvas {
 		}
 
 		public void mouseClicked(MouseEvent event) {
-			controller.setFrequency((int) (event.getX() * FREQUENCY_TO_PIXELS_SCALE_FACTOR));
+			if (event.isShiftDown()) {
+				controller.setTransmitterFrequency((double) (event.getX() * FREQUENCY_TO_PIXELS_SCALE_FACTOR));
+			} else {
+				controller.setReceiverFrequency((double) (event.getX() * FREQUENCY_TO_PIXELS_SCALE_FACTOR));
+			}
 		}
 
 		public void mouseExited(MouseEvent event) {

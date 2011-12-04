@@ -8,14 +8,14 @@
 package net.jdigi.receiver;
 
 public interface Controller {
-	public void setFrequency(double f);
+	public void setReceiverFrequency(double frequency);
 
-	public void setFrequency(double f, boolean userClick);
+	public void setTransmitterFrequency(double frequency);
 
-	public void setSampleRate(int f);
+	public void setSampleRate(int frameRate);
 
 	public abstract void handleSpectrum(int frame, double data[], int length);
 
-	public abstract void handleText(int frame, String s);
+	public abstract void handleText(int frame, String text);
 
 }

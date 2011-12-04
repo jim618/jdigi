@@ -73,7 +73,8 @@ public class BPSKDemodulator {
 	}
 
 	public void handleWave(int frame, double waveData[], int length) {
-		//System.out.println("BPSKDemodulator/handleWave called for frame = " + frame);
+		// System.out.println("BPSKDemodulator/handleWave called for frame = " +
+		// frame);
 		sb = new StringBuffer();
 		Complex result[] = mixer.mixIQ(waveData, length);
 
@@ -109,10 +110,11 @@ public class BPSKDemodulator {
 
 		if (sigSearchCount > 0)
 			findsignal();
-		
+
 		String demodulatedText = sb.toString();
 		controller.handleText(frame, demodulatedText);
-		//System.out.println("BPSKDemodulator/handleWave - I saw text : " + demodulatedText);
+		// System.out.println("BPSKDemodulator/handleWave - I saw text : " +
+		// demodulatedText);
 	}
 
 	private void rx_symbol(Complex symbol) {
@@ -202,7 +204,7 @@ public class BPSKDemodulator {
 		error *= scale;
 		if (Math.abs(error) < bandwidth) {
 			freqerr = decayavg(freqerr, error, AFCDECAY);
-			//controller.setFrequency(getFrequency() - freqerr);
+			// controller.setFrequency(getFrequency() - freqerr);
 		}
 	}
 

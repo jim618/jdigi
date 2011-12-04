@@ -33,9 +33,10 @@ public class BPSKModulator {
 	private static final double BASE_FREQUENCY = 31.25; // Hz
 
 	// carrier wave frequency
-	private static final int CARRIER_WAVE_FREQUENCY = 2000; // Hz
-
-	private static final int SAMPLES_PER_SYMBOL = (int) (SAMPLE_RATE / BASE_FREQUENCY * 2);
+	private static final double DEFAULT_CARRIER_WAVE_FREQUENCY = 1000; // Hz
+    private double carrierWaveFrequency;
+	
+	private static final int SAMPLES_PER_SYMBOL = (int) (SAMPLE_RATE / BASE_FREQUENCY);
 
 	// mean amplitude output
 	private static final double BASE_AMPLITUDE = 16383; // 8191;
@@ -57,6 +58,7 @@ public class BPSKModulator {
 	private static final int NUMBER_OF_REVERSALS_IN_POSTAMBLE = 32;
 
 	public BPSKModulator() {
+		carrierWaveFrequency = DEFAULT_CARRIER_WAVE_FREQUENCY;
 		initialise();
 	}
 
@@ -146,13 +148,13 @@ public class BPSKModulator {
 	}
 
 	void outputSymbol(ShortBuffer shortBuffer, boolean outputPhaseZero, boolean rampUp, boolean rampDown) {
+		double primaryScaleFactor =  2 * Math.PI * carrierWaveFrequency / BASE_FREQUENCY / (double) SAMPLES_PER_SYMBOL;
 		for (int sampleCount = 0; sampleCount < SAMPLES_PER_SYMBOL; sampleCount++) {
-			// time is 0.00 at beginning of symbol output, TIME_PER_SYMBOL at
-			// end of symbol output
+			// time is 0.00 at beginning of symbol output,TIME_PER_SYMBOL at end of symbol output
 
 			// work out value of output due to carrier wave
 			double time = (double) sampleCount / (double) SAMPLES_PER_SYMBOL;
-			double carrierFrequencySampleValue = Math.sin(time * CARRIER_WAVE_FREQUENCY * 2 * Math.PI);
+			double carrierFrequencySampleValue = Math.sin(sampleCount * primaryScaleFactor);
 			if (!outputPhaseZero) {
 				carrierFrequencySampleValue = 0 - carrierFrequencySampleValue;
 			}
@@ -183,7 +185,7 @@ public class BPSKModulator {
 		AudioFormat audioFormat = new AudioFormat(SAMPLE_RATE, BITS_PER_SAMPLE, NUMBER_OF_CHANNELS, true, true);
 		AudioInputStream ais = new AudioInputStream(is, audioFormat, buffer.length / audioFormat.getFrameSize());
 		
-		writeAudio(ais);
+		//writeAudio(ais);
 		
 		DataLine.Info dataLineInfo = new DataLine.Info(SourceDataLine.class, audioFormat);
 		SourceDataLine sourceDataLine = (SourceDataLine) AudioSystem.getLine(dataLineInfo);
@@ -207,6 +209,10 @@ public class BPSKModulator {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}// end catch
+	}
+	
+	public void setFrequency(double frequency) {
+		carrierWaveFrequency = frequency;
 	}
 
 	/**

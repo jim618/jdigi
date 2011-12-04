@@ -1,19 +1,16 @@
 package net.jdigi.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Choice;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.io.IOException;
 import java.text.DecimalFormat;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -23,23 +20,32 @@ import javax.swing.JTextField;
 
 import net.jdigi.receiver.Controller;
 import net.jdigi.receiver.Receiver;
+import net.jdigi.transmitter.Transmitter;
 
 public class JDigi extends JFrame implements Controller {
 	private static final long serialVersionUID = 2087100291097214476L;
 
+	private static final double DEFAULT_TRANSMIT_FREQUENCY = 1000; // Hz
+	private static final double DEFAULT_RECEIVE_FREQUENCY = 1000; // Hz
+
 	private Waterfall waterfall;
-	
+
 	private static String FREQUENCY_SUFFIX = " Hz";
-	private JLabel frequencyDisplay;
+
+	private JLabel receiveFrequencyLabel;
+	private JLabel receiveFrequencyDisplay;
+
+	private JLabel transmitFrequencyLabel;
+	private JLabel transmitFrequencyDisplay;
 
 	private int frequency;
 	private boolean lsb = true;
 
-	private final static int OUTPUT_TEXT_ROWS = 22;
+	private final static int OUTPUT_TEXT_ROWS = 8;
 	private final static int OUTPUT_TEXT_COLUMNS = 80;
-	private final static int INPUT_TEXT_ROWS = 7;
+	private final static int INPUT_TEXT_ROWS = 8;
 	private final static int INPUT_TEXT_COLUMNS = 80;
-	
+
 	private JTextArea outputTextArea;
 	private JScrollPane outputScrollPane;
 
@@ -56,18 +62,23 @@ public class JDigi extends JFrame implements Controller {
 
 	private Receiver receiver = null;
 
+	private Transmitter transmitter = null;
+
 	public JDigi() {
 		super("JDigi");
 
 		this.receiver = new Receiver(this);
-		
+		this.transmitter = new Transmitter();
+
 		setBackground(java.awt.Color.white);
 		setLayout(new BorderLayout());
 		setResizable(true);
 		setVisible(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		init();
 		pack();
+		setReceiverFrequency(DEFAULT_RECEIVE_FREQUENCY);
+		setTransmitterFrequency(DEFAULT_TRANSMIT_FREQUENCY);
 	}
 
 	public static void main(String[] args) {
@@ -82,124 +93,86 @@ public class JDigi extends JFrame implements Controller {
 		outputTextArea.setEditable(false);
 		outputTextArea.setVisible(true);
 		outputScrollPane = new JScrollPane(outputTextArea);
-
+		outputScrollPane.setBorder(BorderFactory.createTitledBorder("Received text"));
+		outputScrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+			public void adjustmentValueChanged(AdjustmentEvent e) {
+				e.getAdjustable().setValue(e.getAdjustable().getMaximum());
+			}
+		});
 		topPanel.add(outputScrollPane, BorderLayout.NORTH);
 
 		inputTextArea = new JTextArea(INPUT_TEXT_ROWS, INPUT_TEXT_COLUMNS);
 		inputTextArea.setEditable(false);
 		inputTextArea.setVisible(true);
 		inputScrollPane = new JScrollPane(inputTextArea);
-
+		inputScrollPane.setBorder(BorderFactory.createTitledBorder("Transmitted text"));
+		inputScrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+			public void adjustmentValueChanged(AdjustmentEvent e) {
+				e.getAdjustable().setValue(e.getAdjustable().getMaximum());
+			}
+		});
 		topPanel.add(inputScrollPane, BorderLayout.CENTER);
 
 		inputTextField = new JTextField(INPUT_TEXT_COLUMNS);
 		inputTextField.setVisible(true);
+		inputTextField.setBorder(BorderFactory.createTitledBorder("Input text"));
 		inputTextField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-		        String text = inputTextField.getText();
-		        inputTextArea.append(text + "\n");
-		        inputTextField.setText("");
+				String text = inputTextField.getText();
+				inputTextArea.append(text + "\n");
+				inputTextField.setText("");
 
-		        //Make sure the new text is visible, even if there
-		        //was a selection in the text area.
-		        inputTextArea.setCaretPosition(inputTextArea.getDocument().getLength());
-		        
-		        // TODO also need to transmit text
+				// Make sure the new text is visible, even if there
+				// was a selection in the text area.
+				inputTextArea.setCaretPosition(inputTextArea.getDocument().getLength());
+
+				// Transmit inputted text
+				transmitter.transmit(text);
 			}
 		});
 		topPanel.add(inputTextField, BorderLayout.SOUTH);
-		
+
 		add(topPanel, BorderLayout.NORTH);
 
 		// Center Panel: Menus and Buttons
-		String qsoName = "QSO 1";
 		centerPanel = new JPanel(new BorderLayout());
 		add(centerPanel, BorderLayout.CENTER);
 
-		buttonRowPanel = new JPanel(new FlowLayout());
+		buttonRowPanel = new JPanel(new BorderLayout());
 
-		Choice bQso = new Choice();
-		bQso.add(qsoName);
-		bQso.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				Choice c = ((Choice) (e.getItemSelectable()));
-				System.err.println("QSO " + c.getItem(c.getSelectedIndex()));
-			}
-		});
-		buttonRowPanel.add(bQso);
-
-		frequencyDisplay = new JLabel("          ");
-		buttonRowPanel.add(frequencyDisplay, BorderLayout.EAST);
-		frequencyDisplay.setVisible(true);
-
-		JButton bTx = new JButton("TX");
-		bTx.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				System.err.println("TX Button");
-			}
-		});
-		buttonRowPanel.add(bTx, BorderLayout.EAST);
-
-		JButton bRx = new JButton("RX");
-		bRx.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				System.err.println("RX Button");
-			}
-		});
-		buttonRowPanel.add(bRx, BorderLayout.EAST);
-
-		JButton bAbortTx = new JButton("ABORT TX!");
-		bAbortTx.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				System.err.println("ABORT TX!");
-			}
-		});
-		buttonRowPanel.add(bAbortTx, BorderLayout.EAST);
-
-		JButton bClearRx = new JButton("Clear RX");
-		bClearRx.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				outputTextArea.setText("");
-			}
-		});
-		buttonRowPanel.add(bClearRx, BorderLayout.EAST);
-
-		JButton bClearTx = new JButton("Clear TX");
-		bClearTx.addActionListener(new ActionListener() {
+		JPanel topButtonRowPanel = new JPanel(new FlowLayout());
+		buttonRowPanel.add(topButtonRowPanel, BorderLayout.NORTH);
+		JLabel helpLabel1 = new JLabel("Shift-Click on waterfall to set the Transmit Frequency");
+		topButtonRowPanel.add(helpLabel1);
+		JButton clearTransmitButton = new JButton("Clear Transmit");
+		clearTransmitButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				inputTextArea.setText("");
 			}
 		});
-		buttonRowPanel.add(bClearTx, BorderLayout.EAST);
+		topButtonRowPanel.add(clearTransmitButton);
 
-		JCheckBox bAfc = new JCheckBox("AFC", true);
-		bAfc.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				lsb = ((JCheckBox) (e.getItemSelectable())).isSelected();
-				System.err.println("AFC=" + lsb);
+		transmitFrequencyLabel = new JLabel("Transmit Frequency:");
+		topButtonRowPanel.add(transmitFrequencyLabel);
+		transmitFrequencyDisplay = new JLabel("          ");
+		topButtonRowPanel.add(transmitFrequencyDisplay);
+
+		JPanel bottomButtonRowPanel = new JPanel(new FlowLayout());
+		buttonRowPanel.add(bottomButtonRowPanel, BorderLayout.SOUTH);
+		JLabel helpLabel2 = new JLabel("Click on waterfall to set the Receive Frequency");
+		bottomButtonRowPanel.add(helpLabel2);
+		JButton clearReceiveButton = new JButton("Clear Receive");
+		clearReceiveButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				outputTextArea.setText("");
 			}
 		});
-		buttonRowPanel.add(bAfc, BorderLayout.EAST);
+		bottomButtonRowPanel.add(clearReceiveButton);
 
-		JCheckBox bSql = new JCheckBox("SQL", true);
-		bSql.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				lsb = ((JCheckBox) (e.getItemSelectable())).isSelected();
-				System.err.println("SQL=" + lsb);
-			}
-		});
-		buttonRowPanel.add(bSql, BorderLayout.EAST);
-
-		JCheckBox bLsb = new JCheckBox("LSB", false);
-		bLsb.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				lsb = ((JCheckBox) (e.getItemSelectable())).isSelected();
-				System.err.println("LSB=" + lsb);
-			}
-		});
-		buttonRowPanel.add(bLsb, BorderLayout.EAST);
-
-		buttonRowPanel.setVisible(true);
+		receiveFrequencyLabel = new JLabel("Receive Frequency:");
+		bottomButtonRowPanel.add(receiveFrequencyLabel);
+		receiveFrequencyDisplay = new JLabel("          ");
+		bottomButtonRowPanel.add(receiveFrequencyDisplay);
 
 		centerPanel.add(buttonRowPanel, BorderLayout.SOUTH);
 
@@ -242,31 +215,43 @@ public class JDigi extends JFrame implements Controller {
 		return offsetAsHz(frequency);
 	}
 
-	public void setFrequency(double f) {
-		setFrequency(f, false);
-	}
-
-	public void setFrequency(double f, boolean userClick) {
+	public void setReceiverFrequency(double frequency) {
 		if (receiver.getModemThread() != null) {
 			receiver.getModemThread().setFrequency(frequency);
 		}
-		frequencyDisplay.setText(frequencyFormat.format(f) + FREQUENCY_SUFFIX);
-		waterfall.setFrequency((int)frequency);
-		System.out.println("JDigi/setFrequency - setting frequency to " + f + " Hz.");
+		receiveFrequencyDisplay.setText(frequencyFormat.format(frequency) + FREQUENCY_SUFFIX);
+		waterfall.setReceiveFrequency((int) frequency);
+		if (outputTextArea != null) {
+			outputTextArea.append("\nNow listening to " + frequency + " Hz.\n");
+		}
+	}
+
+	public void setTransmitterFrequency(double frequency) {
+		if (transmitter != null) {
+			transmitter.setFrequency(frequency);
+		}
+		transmitFrequencyDisplay.setText(frequencyFormat.format(frequency) + FREQUENCY_SUFFIX);
+		if (inputTextArea != null) {
+			inputTextArea.append("\nNow transmitting on " + frequency + " Hz.\n");
+		}
 	}
 
 	public void setSampleRate(int f) {
 	}
 
-	public void handleText(int frame, String s) {
-		outputTextArea.append(s);
+	public void handleText(int frame, String text) {
+		if (outputTextArea != null) {
+			outputTextArea.append(text);
+		}
 	}
 
 	public void handleSpectrum(int frame, double[] data, int length) {
 		// System.out.println("JDigi/handleSpectrum - saw frame = " + frame +
 		// ", length = " + length);
 		try {
-			waterfall.handleSpectrum(frame, data, length);
+			if (waterfall != null) {
+				waterfall.handleSpectrum(frame, data, length);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
