@@ -30,7 +30,10 @@ public class BPSKModulator {
 	private static final int BYTES_PER_SAMPLE = 2;
 
 	// frequency of symbol output
-	private static final double BASE_FREQUENCY = 31.25; // Hz
+	//private static final double //BASE_FREQUENCY = 31.25; // Hz - BPSK31
+	//private static final double BASE_FREQUENCY = 62.5; // Hz - BPSK63
+	private static final double BASE_FREQUENCY = 125; // Hz - BPSK125
+	//private static final double BASE_FREQUENCY = 250; // Hz - BPSK250
 
 	// carrier wave frequency
 	private static final double DEFAULT_CARRIER_WAVE_FREQUENCY = 1000; // Hz
@@ -54,7 +57,7 @@ public class BPSKModulator {
 	// if true output phase zero, if false output phase 180
 	private boolean outputPhaseZero;
 
-	private static final int NUMBER_OF_REVERSALS_IN_PREAMBLE = 32;
+	private static final int NUMBER_OF_REVERSALS_IN_PREAMBLE = 64;
 	private static final int NUMBER_OF_REVERSALS_IN_POSTAMBLE = 32;
 
 	public BPSKModulator() {
@@ -161,17 +164,17 @@ public class BPSKModulator {
 			double sampleValue = carrierFrequencySampleValue * BASE_AMPLITUDE;
 
 			// modulate for ramp up/ ramp down
-			if (rampUp && (time < 0.5)) {
+			if (rampUp && (time < 0.25)) {
 				// ramp up sine wise - 0 at time zero, 1 at time TIME_PER_SYMBOL
-				// / 2
-				double radians = time * Math.PI;
+				// 
+				double radians = time * Math.PI * 2;
 				double scaleFactor = Math.sin(radians);
 				sampleValue = sampleValue * scaleFactor;
 			}
-			if (rampDown && (time > 0.5)) {
+			if (rampDown && (time > 0.75)) {
 				// ramp down cosine wise - 1 at time TIME_PER_SYMBOL / 2, 0 at
 				// TIME_PER_SYMBOL
-				double radians = (time - 0.5) * Math.PI;
+				double radians = (time - 0.75) * Math.PI * 2;
 				double scaleFactor = Math.cos(radians);
 				sampleValue = sampleValue * scaleFactor;
 			}

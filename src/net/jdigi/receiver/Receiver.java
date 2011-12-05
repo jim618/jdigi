@@ -35,13 +35,22 @@ public class Receiver {
 	public void initAudioIn() {
 		int deviceCount = AudioUtils.getMixerCount();
 		System.out.println("Receiver/initAudioIn - List of sound devices available :");
+		int deviceToUse = -1;
+		
 		for (int deviceNo = 0; deviceNo < deviceCount; deviceNo++) {
 			System.out.println("\tDevice number : " + deviceNo + ", " + AudioUtils.getMixerName(deviceNo));
+			if (AudioUtils.getMixerName(deviceNo) != null && AudioUtils.getMixerName(deviceNo).toLowerCase().indexOf("microphone") > -1){
+				deviceToUse = deviceNo;
+			}
 		}
 
+		if (deviceToUse != -1) {
 		if (startReceiver(AudioUtils.getMixerName(1))) {
-			System.out.println("Receiver/initAudioIn - Using device " + 1);
+			System.out.println("Receiver/initAudioIn - Using device " + deviceToUse);
 		}
+		} else {
+			System.out.println("Receiver/initAudioIn - Could not find a microphone to use");
+	    }
 	}
 
 	public boolean startReceiver(String soundDevice) {

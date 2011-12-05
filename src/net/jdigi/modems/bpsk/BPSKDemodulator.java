@@ -9,7 +9,10 @@ import net.jdigi.receiver.Controller;
 public class BPSKDemodulator {
 	// 256 samples at 8Khz yields 31.25 Hz
 	// It ought to be calculated the other way around.
-	int symbolLen = 256;
+//	int symbolLen = 256;  // BPSK31
+//	int symbolLen = 128;  // BPSK63
+	int symbolLen = 64;   // BPSK125
+	//int symbolLen = 32;   // BPSK250
 	int sampleRate;
 	double bandwidth;
 	IQFIRFilter filter1;
