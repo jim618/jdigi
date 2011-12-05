@@ -11,8 +11,8 @@ public class BPSKDemodulator {
 	// It ought to be calculated the other way around.
 //	int symbolLen = 256;  // BPSK31
 //	int symbolLen = 128;  // BPSK63
-	int symbolLen = 64;   // BPSK125
-	//int symbolLen = 32;   // BPSK250
+//	int symbolLen = 64;   // BPSK125
+	int symbolLen = 32;   // BPSK250
 	int sampleRate;
 	double bandwidth;
 	IQFIRFilter filter1;

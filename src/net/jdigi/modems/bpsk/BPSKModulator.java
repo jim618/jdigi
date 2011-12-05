@@ -32,8 +32,8 @@ public class BPSKModulator {
 	// frequency of symbol output
 	//private static final double //BASE_FREQUENCY = 31.25; // Hz - BPSK31
 	//private static final double BASE_FREQUENCY = 62.5; // Hz - BPSK63
-	private static final double BASE_FREQUENCY = 125; // Hz - BPSK125
-	//private static final double BASE_FREQUENCY = 250; // Hz - BPSK250
+	//private static final double BASE_FREQUENCY = 125; // Hz - BPSK125
+	private static final double BASE_FREQUENCY = 250; // Hz - BPSK250
 
 	// carrier wave frequency
 	private static final double DEFAULT_CARRIER_WAVE_FREQUENCY = 1000; // Hz
@@ -57,7 +57,7 @@ public class BPSKModulator {
 	// if true output phase zero, if false output phase 180
 	private boolean outputPhaseZero;
 
-	private static final int NUMBER_OF_REVERSALS_IN_PREAMBLE = 64;
+	private static final int NUMBER_OF_REVERSALS_IN_PREAMBLE = 96;
 	private static final int NUMBER_OF_REVERSALS_IN_POSTAMBLE = 32;
 
 	public BPSKModulator() {
@@ -225,6 +225,6 @@ public class BPSKModulator {
 	 */
 	public static void main(String[] args) throws LineUnavailableException, IOException {
 
-		new BPSKModulator().convertStringToSymbols("bitcoin:1KAcxZPRc495U8ZQxnY1ZnhRE46HvA6nUc?amount=4.025&label=Bitcoin Books");
+		new BPSKModulator().convertStringToSymbols("xb:1KAcxZPRc495U8ZQxnY1ZnhRE46HvA6nUc?a=4.025&l=Bitcoin Booksy1234z");
 	}
 }
