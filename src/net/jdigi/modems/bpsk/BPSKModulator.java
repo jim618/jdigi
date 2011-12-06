@@ -34,6 +34,7 @@ public class BPSKModulator {
 	//private static final double BASE_FREQUENCY = 62.5; // Hz - BPSK63
 	//private static final double BASE_FREQUENCY = 125; // Hz - BPSK125
 	private static final double BASE_FREQUENCY = 250; // Hz - BPSK250
+	//private static final double BASE_FREQUENCY = 500; // Hz - BPSK500
 
 	// carrier wave frequency
 	private static final double DEFAULT_CARRIER_WAVE_FREQUENCY = 1000; // Hz
@@ -57,7 +58,7 @@ public class BPSKModulator {
 	// if true output phase zero, if false output phase 180
 	private boolean outputPhaseZero;
 
-	private static final int NUMBER_OF_REVERSALS_IN_PREAMBLE = 96;
+	private static final int NUMBER_OF_REVERSALS_IN_PREAMBLE = 128;
 	private static final int NUMBER_OF_REVERSALS_IN_POSTAMBLE = 32;
 
 	public BPSKModulator() {

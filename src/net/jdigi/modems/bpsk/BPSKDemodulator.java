@@ -13,6 +13,7 @@ public class BPSKDemodulator {
 //	int symbolLen = 128;  // BPSK63
 //	int symbolLen = 64;   // BPSK125
 	int symbolLen = 32;   // BPSK250
+	//int symbolLen = 16;   // BPSK500
 	int sampleRate;
 	double bandwidth;
 	IQFIRFilter filter1;
