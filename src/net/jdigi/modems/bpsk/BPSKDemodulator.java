@@ -7,52 +7,63 @@ import net.jdigi.dsp.Mixer;
 import net.jdigi.receiver.Controller;
 
 public class BPSKDemodulator {
+	// length of symbol in samples
 	// 256 samples at 8Khz yields 31.25 Hz
 	// It ought to be calculated the other way around.
-//	int symbolLen = 256;  // BPSK31
-//	int symbolLen = 128;  // BPSK63
-//	int symbolLen = 64;   // BPSK125
-	int symbolLen = 32;   // BPSK250
-	//int symbolLen = 16;   // BPSK500
-	int sampleRate;
-	double bandwidth;
-	IQFIRFilter filter1;
-	IQFIRFilter filter2;
-	Mixer mixer;
-	double bitclk;
-	int bits = 0;
-	int dcdshreg = 0;
-	int shreg = 0;
-	boolean dcd = false;
-	double syncbuf[] = new double[16];
-	double phaseacc = 0;
-	Complex prevsymbol;
-	double phase = 0;
-	Complex quality;
-	double metric = 0.0;
-	double squelch = 10.0;
-	boolean squelchon = true;
-	StringBuffer sb;
-	boolean afcon = true;
-	int sigSearchCount = 0;
-	final static int SEARCH_RANGE = 200;
-	final static double SN_THRESHOLD = 2.0;
-	final static int AFCDECAY = 8;
 
-	double freqerr = 0.0;
+	// int symbolLength = 256; // BPSK31
+	// int symbolLength = 128; // BPSK63
+	// int symbolLength = 64; // BPSK125
+	// int symbolLength = 32; // BPSK250
+	private int symbolLength = 16; // BPSK500
+
+	private IQFIRFilter filter1;
+	private IQFIRFilter filter2;
+	private Mixer mixer;
+
+	/**
+	 * clock within symbol time window indicating where data is to be sampled
+	 */
+	private double bitClock;
+	private int bits = 0;
+	private int decodeShiftRegister = 0;
+	private int symbolShiftRegister = 0;
+
+	/**
+	 * whether to decode the symbols into output characters
+	 */
+	private boolean decode = false;
+
+	private double synchronisationBuffer[] = new double[16];
+	private Complex previousSymbol;
+	private double phase = 0;
+	private Complex quality;
+	private double metric = 0.0;
+
+	/**
+	 * threshold for squelch
+	 */
+	private double squelch = 10.0;
+
+	/**
+	 * is squelch on ?
+	 */
+	private boolean squelchOn = true;
+
+	private StringBuffer demodulatedTextStringBuffer;
+
 	Controller controller = null;
 
 	public BPSKDemodulator(int sampleRate, Controller controller) {
 		this.controller = controller;
-		this.sampleRate = sampleRate;
-		bandwidth = sampleRate / (double) symbolLen;
+
 		mixer = new Mixer(sampleRate);
 		// low-pass filter fc=1/symbolLen order=64 (sin(x)/x with blackman
 		// window)
 		// decimation by symbolLen/16
 		{
-			filter1 = new IQFIRFilter(symbolLen / 16);
-			filter1.implement(new LowPassFilterDesign(64, 1.0 / symbolLen));
+			filter1 = new IQFIRFilter(symbolLength / 16);
+			filter1.implement(new LowPassFilterDesign(64, 1.0 / symbolLength));
 		}
 		// low-pass filter fc=1/16 order=64 (sin(x)/x with blackman window)
 		// no decimation.
@@ -60,11 +71,11 @@ public class BPSKDemodulator {
 			filter2 = new IQFIRFilter(1);
 			filter2.implement(new LowPassFilterDesign(64, 1.0 / 16.0));
 		}
-		bitclk = 0.0;
-		prevsymbol = new Complex(1.0, 0.0);
+
+		bitClock = 0.0;
+		previousSymbol = new Complex(1.0, 0.0);
 		quality = new Complex(0.0, 0.0);
-		phaseacc = 0;
-		dcdshreg = 0;
+		decodeShiftRegister = 0;
 		phase = 0;
 	}
 
@@ -79,140 +90,136 @@ public class BPSKDemodulator {
 	public void handleWave(int frame, double waveData[], int length) {
 		// System.out.println("BPSKDemodulator/handleWave called for frame = " +
 		// frame);
-		sb = new StringBuffer();
+		demodulatedTextStringBuffer = new StringBuffer();
+
+		// mix wavedata with phasor rotating at set frequency
 		Complex result[] = mixer.mixIQ(waveData, length);
 
+		// filter the wave data
 		Complex result1[] = filter1.filter(result, length);
-		int nsyms = length / (symbolLen / 16);
-		Complex result2[] = filter2.filter(result1, nsyms);
-		for (int samp = 0; samp < nsyms; samp++) {
-			Complex z = result2[samp];
+		int nunberOfSymbols = length / (symbolLength / 16);
+		Complex result2[] = filter2.filter(result1, nunberOfSymbols);
+
+		// work out position of bit in window
+		for (int sample = 0; sample < nunberOfSymbols; sample++) {
+			Complex z = result2[sample];
 			double zmag = z.abs();
 			double sum = 0.0;
 			double ampsum = 0.0;
-			int idx = (int) bitclk;
+			int idx = (int) bitClock;
 
-			syncbuf[idx] = 0.8 * syncbuf[idx] + 0.2 * zmag;
-			for (int i = 0; i < 8; i++) {
-				sum += (syncbuf[i] - syncbuf[i + 8]);
-				ampsum += (syncbuf[i] + syncbuf[i + 8]);
-			}
+			// decaying average - insert current sample magnitude
+			synchronisationBuffer[idx] = 0.8 * synchronisationBuffer[idx] + 0.2 * zmag;
+
 			// added correction as per PocketDigi
 			// vastly improved performance with synchronous interference !!
+			for (int i = 0; i < 8; i++) {
+				sum += (synchronisationBuffer[i] - synchronisationBuffer[i + 8]);
+				ampsum += (synchronisationBuffer[i] + synchronisationBuffer[i + 8]);
+			}
 			sum = (ampsum == 0.0 ? 0.0 : (sum / ampsum));
+			bitClock -= (sum / 5.0);
 
-			bitclk -= (sum / 5.0);
-			bitclk += 1;
-			if (bitclk < 0)
-				bitclk += 16.0;
-			if (bitclk >= 16.0) {
-				bitclk -= 16.0;
-				rx_symbol(z);
-				afc();
+			// time minor ticks
+			bitClock += 1;
+
+			// ensure bitClock is between 0 and 16
+			if (bitClock < 0) {
+				bitClock += 16.0;
+			}
+			if (bitClock >= 16.0) {
+				bitClock -= 16.0;
+
+				// process symbol on each major time tick
+				receiveSymbol(z);
 			}
 		}
 
-		if (sigSearchCount > 0)
-			findsignal();
-
-		String demodulatedText = sb.toString();
+		String demodulatedText = demodulatedTextStringBuffer.toString();
 		controller.handleText(frame, demodulatedText);
-		// System.out.println("BPSKDemodulator/handleWave - I saw text : " +
-		// demodulatedText);
 	}
 
-	private void rx_symbol(Complex symbol) {
+	private void receiveSymbol(Complex symbol) {
 		// The following is a clever way of calculating
 		// prevsymbol.phase()-symbol.phase().
 		// It's not clear it's any better than just doing
 		// prevPhase-symbol.phase() though.
-		phase = (prevsymbol.conjugateTimes(symbol)).phase();
-		prevsymbol = symbol;
+		phase = (previousSymbol.conjugateTimes(symbol)).phase();
+		previousSymbol = symbol;
 
-		if (phase < 0)
+		// ensure phase is between 0 and 2 pi radians
+		if (phase < 0) {
 			phase += 2 * Math.PI;
+		}
+
+		// work out if phase inversion has occurred
 		bits = (((int) (phase / Math.PI + 0.5)) & 1) << 1;
 
 		// simple low pass filter for quality of signal
 		quality = new Complex(0.02 * Math.cos(2 * phase) + 0.98 * quality.Re(), 0.02 * Math.sin(2 * phase) + 0.98 * quality.Im());
 		metric = 100.0 * quality.norm();
 
-		dcdshreg = (dcdshreg << 2) | bits;
+		decodeShiftRegister = (decodeShiftRegister << 2) | bits;
 
-		switch (dcdshreg) {
-		case 0xAAAAAAAA: /* DCD on by preamble */
-			dcd = true;
+		switch (decodeShiftRegister) {
+		case 0xAAAAAAAA: /* decode is on for preamble - 16 inversions */
+			decode = true;
 			quality = new Complex(1.0, 0.0);
 			break;
 
-		case 0: /* DCD off by postamble */
-			dcd = false;
+		case 0: /* decode is off for postamble */
+			decode = false;
 			quality = new Complex(0.0, 0.0);
 			break;
 
 		default:
-			dcd = (!squelchon || metric > squelch);
+			decode = (!squelchOn || metric > squelch);
 		}
 
-		if (dcd) {
-			rx_bit(bits == 0 ? 1 : 0);
+		if (decode) {
+			receiveBit(bits == 0 ? 1 : 0);
 		}
-
 	}
 
-	private void rx_bit(int bit) {
-		shreg = (shreg << 1) | bit;
-		if ((shreg & 3) == 0) {
-			int c = PSKVaricode.psk_varicode_decode(shreg >> 2);
-			if (c != -1) {
-				put_rx_char(c);
+	/**
+	 * receive a single bit no change of phase is indicated a '1' data bit
+	 * change of phase is indicated by a '0' data
+	 * 
+	 * @param bit
+	 */
+	private void receiveBit(int bit) {
+		symbolShiftRegister = (symbolShiftRegister << 1) | bit;
+
+		// check to see if last two bits indicate an end of symbol space has
+		// been received
+		if ((symbolShiftRegister & 3) == 0) {
+			// work out the received character
+			int receivedCharacter = PSKVaricode.psk_varicode_decode(symbolShiftRegister >> 2);
+			if (receivedCharacter != -1) {
+				putReceivedCharacter(receivedCharacter);
 			}
-			shreg = 0;
+			symbolShiftRegister = 0;
 		}
 	}
 
-	private void put_rx_char(int c) {
+	/**
+	 * receive a single character
+	 * 
+	 * @param receivedCharacter
+	 */
+	private void putReceivedCharacter(int receivedCharacter) {
 		// Handle backspace and delete by removing last char if possible
 		// If too late, pass it through and let the next level handle it.
-		if (c == 8 || c == 127) {
-			int len = sb.length();
+		if (receivedCharacter == 8 || receivedCharacter == 127) {
+			int len = demodulatedTextStringBuffer.length();
 			if (len > 0) {
-				sb.setLength(len - 1);
+				demodulatedTextStringBuffer.setLength(len - 1);
 			} else {
-				sb.append((char) c); // too late
+				// too late
+				demodulatedTextStringBuffer.append((char) receivedCharacter);
 			}
 		} else {
-			sb.append((char) c);
+			demodulatedTextStringBuffer.append((char) receivedCharacter);
 		}
-	}
-
-	private void afc() {
-		if (!afcon)
-			return;
-		if (sigSearchCount > 0)
-			findsignal();
-		else if (dcd)
-			phaseafc();
-	}
-
-	private void findsignal() {
-	}
-
-	private void phaseafc() {
-		double error = (phase - bits * Math.PI / 2.0);
-		if (error < Math.PI / 2.0)
-			error += 2.0 * Math.PI;
-		if (error > Math.PI / 2)
-			error -= 2.0 * Math.PI;
-		double scale = ((sampleRate / (symbolLen * 2.0 * Math.PI) / 16.0));
-		error *= scale;
-		if (Math.abs(error) < bandwidth) {
-			freqerr = decayavg(freqerr, error, AFCDECAY);
-			// controller.setFrequency(getFrequency() - freqerr);
-		}
-	}
-
-	private double decayavg(double average, double input, double weight) {
-		return input * (1.0 / weight) + average * (1.0 - (1.0 / weight));
 	}
 }

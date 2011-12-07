@@ -33,8 +33,8 @@ public class BPSKModulator {
 	//private static final double //BASE_FREQUENCY = 31.25; // Hz - BPSK31
 	//private static final double BASE_FREQUENCY = 62.5; // Hz - BPSK63
 	//private static final double BASE_FREQUENCY = 125; // Hz - BPSK125
-	private static final double BASE_FREQUENCY = 250; // Hz - BPSK250
-	//private static final double BASE_FREQUENCY = 500; // Hz - BPSK500
+	//private static final double BASE_FREQUENCY = 250; // Hz - BPSK250
+	private static final double BASE_FREQUENCY = 500; // Hz - BPSK500
 
 	// carrier wave frequency
 	private static final double DEFAULT_CARRIER_WAVE_FREQUENCY = 1000; // Hz
@@ -226,6 +226,8 @@ public class BPSKModulator {
 	 */
 	public static void main(String[] args) throws LineUnavailableException, IOException {
 
-		new BPSKModulator().convertStringToSymbols("xb:1KAcxZPRc495U8ZQxnY1ZnhRE46HvA6nUc?a=4.025&l=Bitcoin Booksy1234z");
+		//new BPSKModulator().convertStringToSymbols("xb:1KAcxZPRc495U8ZQxnY1ZnhRE46HvA6nUc?a=4.025&l=Bitcoin Booksy1234z");
+		
+		new BPSKModulator().convertStringToSymbols("btctx:AQAAAAHIiNvvsBKucQi8TFzDapDZHUbowhf1320mYEsDQjS7sgAAAACLSDBFAiEA2DskY6VTOQ+crXrrxV3NBpTO2WlJqj0PuH8SQ8FVAQkCIB1klM6zShmDGYJUP+bm5rmwUU4vtk6kwqmgFD/tNLOeAUEEXJz7xrzLdlHvAaEH9enfNCnfN4rTryxNLuhWK8R2Vu+v/673f/ZBgPuKEufEi19ySpJECZJvcr6oEbJDLN09Lv////8CAFElAgAAAAAZdqkUVSVtFbjnROSYZdZPycPXyHzw9PuIrKDY8hsAAAAAGXapFMSMkCol15OWaPijoRlBec97reC5iKwAAAAA");
 	}
 }

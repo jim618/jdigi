@@ -80,13 +80,9 @@ public final class Complex {
 	// or Z = |Z1|*|Z2| exp (j (P2 - P1))
 	// So, |Z| = |X| * |y| and arg(z) = arg(y) - arg(x)
 	public Complex conjugateTimes(Complex y) {
-		if (true) {
-			double real = re * y.re + im * y.im;
-			double imag = re * y.im - im * y.re;
-			return new Complex(real, imag);
-		} else {
-			return conjugate().times(y);
-		}
+		double real = re * y.re + im * y.im;
+		double imag = re * y.im - im * y.re;
+		return new Complex(real, imag);
 	}
 
 	public Complex reciprocal() {
@@ -97,5 +93,4 @@ public final class Complex {
 	public Complex divide(Complex b) {
 		return times(b.reciprocal());
 	}
-
 }
